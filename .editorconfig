@@ -14,6 +14,10 @@ indent_size = 2
 [*.md]
 trim_trailing_whitespace = false
 
+# Shell scripts must keep LF; CRLF breaks the shebang line under bash.
+[*.sh]
+end_of_line = lf
+
 [*.cs]
 # --- using directives ---
 csharp_using_directive_placement = outside_namespace:warning
@@ -106,7 +110,22 @@ dotnet_naming_rule.members_are_pascal_case.style = pascal_case_style
 dotnet_naming_symbols.member_symbol.applicable_kinds = property,method,event
 dotnet_naming_symbols.member_symbol.applicable_accessibilities = public,protected,internal
 
-# --- naming: private fields _camelCase ---
+# --- naming: field rules, most specific first (first matching rule wins) ---
+# constants PascalCase
+dotnet_naming_rule.constants_pascal.severity = warning
+dotnet_naming_rule.constants_pascal.symbols = constant_symbol
+dotnet_naming_rule.constants_pascal.style = pascal_case_style
+dotnet_naming_symbols.constant_symbol.applicable_kinds = field
+dotnet_naming_symbols.constant_symbol.required_modifiers = const
+
+# static fields PascalCase (reference tables, cached singletons)
+dotnet_naming_rule.static_fields_pascal.severity = warning
+dotnet_naming_rule.static_fields_pascal.symbols = static_field_symbol
+dotnet_naming_rule.static_fields_pascal.style = pascal_case_style
+dotnet_naming_symbols.static_field_symbol.applicable_kinds = field
+dotnet_naming_symbols.static_field_symbol.required_modifiers = static
+
+# everything else private: _camelCase
 dotnet_naming_rule.private_fields_underscore.severity = warning
 dotnet_naming_rule.private_fields_underscore.symbols = private_field_symbol
 dotnet_naming_rule.private_fields_underscore.style = underscore_camel
@@ -114,13 +133,6 @@ dotnet_naming_symbols.private_field_symbol.applicable_kinds = field
 dotnet_naming_symbols.private_field_symbol.applicable_accessibilities = private
 dotnet_naming_style.underscore_camel.required_prefix = _
 dotnet_naming_style.underscore_camel.capitalization = camel_case
-
-# --- naming: constants PascalCase ---
-dotnet_naming_rule.constants_pascal.severity = warning
-dotnet_naming_rule.constants_pascal.symbols = constant_symbol
-dotnet_naming_rule.constants_pascal.style = pascal_case_style
-dotnet_naming_symbols.constant_symbol.applicable_kinds = field
-dotnet_naming_symbols.constant_symbol.required_modifiers = const
 
 # --- naming: parameters & locals camelCase ---
 dotnet_naming_rule.parameters_camel.severity = warning

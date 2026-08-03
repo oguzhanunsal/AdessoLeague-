@@ -6,10 +6,8 @@
   </PropertyGroup>
 
   <!--
-    Single source of truth for every package version in the solution.
-    Two families are deliberately frozen:
-      * MediatR stays on 12.5.0 - 13.x moved to a commercial license.
-      * All EF Core / Npgsql packages stay on the 8.x family - the solution targets net8.0 (LTS).
+    Frozen on purpose: MediatR stays on 12.5.0 (13.x moved to a commercial license) and every
+    EF Core / Npgsql package stays on 8.x (the solution targets net8.0 LTS).
   -->
   <ItemGroup Label="Application">
     <PackageVersion Include="MediatR" Version="12.5.0" />
