@@ -21,6 +21,8 @@ public sealed class GroupCountTests
     [InlineData(3)]
     [InlineData(5)]
     [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(9)]
     [InlineData(16)]
     [InlineData(32)]
     [InlineData(-4)]
