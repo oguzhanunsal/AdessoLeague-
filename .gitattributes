@@ -1,0 +1,20 @@
+* text=auto
+
+# .editorconfig fixes CRLF for source files, and CI runs `dotnet format --verify-no-changes`.
+# Without these the Linux runner would check out LF and fail the format gate.
+*.cs        text eol=crlf
+*.csproj    text eol=crlf
+*.sln       text eol=crlf
+*.props     text eol=crlf
+*.targets   text eol=crlf
+*.json      text eol=crlf
+*.md        text eol=crlf
+*.http      text eol=crlf
+
+# Anything a Linux shell or Docker executes must keep LF.
+*.sh            text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+Dockerfile      text eol=lf
+.dockerignore   text eol=lf
+.gitattributes  text eol=lf

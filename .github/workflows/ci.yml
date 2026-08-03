@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore AdessoLeague.sln
+
+      - name: Build
+        run: dotnet build AdessoLeague.sln --configuration Release --no-restore
+
+      - name: Verify formatting
+        run: dotnet format AdessoLeague.sln --verify-no-changes --no-restore
+
+      - name: Test
+        run: >
+          dotnet test AdessoLeague.sln
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory ./TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: ./TestResults

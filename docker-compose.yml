@@ -20,5 +20,22 @@ services:
       start_period: 10s
     restart: unless-stopped
 
+  api:
+    build:
+      context: .
+      dockerfile: src/AdessoLeague.Api/Dockerfile
+    container_name: adesso-league-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Development here is what enables Swagger and the migrate-on-startup step; the image itself
+      # carries no environment default.
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: "Host=db;Port=5432;Database=adesso_league;Username=appuser;Password=appuser"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
 volumes:
   adesso-league-db-data:
