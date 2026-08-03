@@ -1,0 +1,92 @@
+### Adesso World League — Draw API
+### docker compose up --build -d  ile @host = http://localhost:8080
+### dotnet run --project src/AdessoLeague.Api  ile @host = http://localhost:5154
+
+@host = http://localhost:8080
+@drawId = 00000000-0000-0000-0000-000000000000
+
+###############################################################################
+# Kura oluşturma
+###############################################################################
+
+### 8 gruba kura — 8 grup x 4 takım, her grupta 4 farklı ülke
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+
+{ "groupCount": 8, "drawnBy": { "firstName": "Oğuzhan", "lastName": "Ünsal" } }
+
+### 4 gruba kura — 4 grup x 8 takım, her grupta 8 ülkenin hepsi
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+
+{ "groupCount": 4, "drawnBy": { "firstName": "Ayşe", "lastName": "Çelik" } }
+
+### Correlation id göndererek — aynı değer yanıt başlığında ve loglarda görünür
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+X-Correlation-Id: my-trace-0001
+
+{ "groupCount": 8, "drawnBy": { "firstName": "Oğuzhan", "lastName": "Ünsal" } }
+
+###############################################################################
+# Doğrulama hataları — hepsi RFC 7807 ProblemDetails döner
+###############################################################################
+
+### Geçersiz grup sayısı -> 400, errors.GroupCount
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+
+{ "groupCount": 5, "drawnBy": { "firstName": "Oğuzhan", "lastName": "Ünsal" } }
+
+### Boş ad -> 400, errors.FirstName
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+
+{ "groupCount": 8, "drawnBy": { "firstName": "   ", "lastName": "Ünsal" } }
+
+### 100 karakteri aşan soyad -> 400, errors.LastName
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+
+{ "groupCount": 8, "drawnBy": { "firstName": "Oğuzhan", "lastName": "UzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyadUzunSoyad" } }
+
+### drawnBy alanı hiç yok -> 400 (model binding)
+POST {{host}}/api/v1/draws
+Content-Type: application/json
+
+{ "groupCount": 8 }
+
+###############################################################################
+# Sorgular
+###############################################################################
+
+### Tek kura — {{drawId}} yerine POST yanıtındaki id'yi yaz
+GET {{host}}/api/v1/draws/{{drawId}}
+
+### Bilinmeyen id -> 404 ProblemDetails
+GET {{host}}/api/v1/draws/11111111-1111-1111-1111-111111111111
+
+### Kura geçmişi — varsayılan sayfalama (pageSize 20)
+GET {{host}}/api/v1/draws
+
+### Kura geçmişi — sayfalı, createdAtUtc azalan
+GET {{host}}/api/v1/draws?page=1&pageSize=5
+
+### pageSize sınırı aşıldı -> 400, errors.PageSize
+GET {{host}}/api/v1/draws?page=1&pageSize=101
+
+### page 1'den küçük -> 400, errors.Page
+GET {{host}}/api/v1/draws?page=0&pageSize=10
+
+###############################################################################
+# Operasyon
+###############################################################################
+
+### Süreç ayakta mı
+GET {{host}}/health/live
+
+### Bağımlılıklar hazır mı (PostgreSQL)
+GET {{host}}/health/ready
+
+### OpenAPI dokümanı (yalnızca Development)
+GET {{host}}/swagger/v1/swagger.json
