@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: adesso-league-db
+    environment:
+      POSTGRES_DB: adesso_league
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: appuser
+    ports:
+      - "5432:5432"
+    volumes:
+      - adesso-league-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d adesso_league"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  adesso-league-db-data:

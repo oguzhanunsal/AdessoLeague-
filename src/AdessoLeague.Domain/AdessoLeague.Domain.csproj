@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The domain layer is intentionally dependency-free: no NuGet packages and no project
+    references. Anything that needs a framework belongs in an outer layer.
+    Shared build properties live in the repository-root Directory.Build.props.
+  -->
+
+</Project>

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AdessoLeague.Domain\AdessoLeague.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
