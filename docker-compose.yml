@@ -7,7 +7,9 @@ services:
       POSTGRES_USER: appuser
       POSTGRES_PASSWORD: appuser
     ports:
-      - "5432:5432"
+      # Published on 5433: a locally installed PostgreSQL commonly owns 5432 and would silently
+      # shadow this container for host connections.
+      - "5433:5432"
     volumes:
       - adesso-league-db-data:/var/lib/postgresql/data
     healthcheck:

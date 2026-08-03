@@ -26,5 +26,20 @@ public sealed record GroupName
         return names;
     }
 
+    // Rehydration path for persistence: the stored column is the only source, so anything outside
+    // the alphabet means the row is corrupt rather than the caller being wrong.
+    internal static GroupName From(string value)
+    {
+        if (value is not { Length: 1 } || !Alphabet.Contains(value[0], StringComparison.Ordinal))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                value,
+                $"Group name must be a single letter from \"{Alphabet}\".");
+        }
+
+        return new GroupName(value);
+    }
+
     public override string ToString() => Value;
 }

@@ -2,6 +2,9 @@ namespace AdessoLeague.Domain.Leagues;
 
 public sealed class Team
 {
+    // Materialization only; the ORM assigns every member right after calling it.
+    private Team() => Name = null!;
+
     private Team(Guid id, Guid countryId, string name)
     {
         Id = id;

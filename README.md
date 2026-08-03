@@ -20,13 +20,24 @@ Kura sonucu ve kurayı çeken kişi PostgreSQL'e kaydedilir.
 docker compose up -d db
 ```
 
-PostgreSQL 16 `localhost:5432` üzerinde ayağa kalkar
+PostgreSQL 16 `localhost:5433` üzerinde ayağa kalkar
 (veritabanı `adesso_league`, kullanıcı/şifre `appuser`/`appuser`).
+Konteynerin içindeki port 5432'dir; dışarıya 5433 açılır, çünkü makinede kurulu bir
+PostgreSQL servisi 5432'yi sahiplenip konteyneri sessizce gölgeleyebiliyor.
 Sağlık durumu:
 
 ```bash
 docker compose ps
 ```
+
+Şema ve sabit veri (8 ülke, 32 takım) API ilk kez Development ortamında başlatıldığında
+migration ile otomatik oluşur. Elle uygulamak istersen:
+
+```bash
+dotnet ef database update -p src/AdessoLeague.Infrastructure -s src/AdessoLeague.Api
+```
+
+Bunun için `dotnet tool install --global dotnet-ef --version "8.*"` gerekir.
 
 ### 2. API'yi çalıştır
 

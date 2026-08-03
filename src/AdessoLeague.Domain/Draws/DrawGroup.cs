@@ -6,6 +6,9 @@ public sealed class DrawGroup
 {
     private readonly List<DrawGroupTeam> _teams = [];
 
+    // Materialization only; the ORM assigns every member right after calling it.
+    private DrawGroup() => Name = null!;
+
     private DrawGroup(Guid id, Guid drawId, GroupName name, int ordinal)
     {
         Id = id;
@@ -32,7 +35,7 @@ public sealed class DrawGroup
 
     internal DrawGroupTeam Place(Team team)
     {
-        var placement = DrawGroupTeam.Create(Guid.NewGuid(), Id, team, _teams.Count + 1);
+        var placement = DrawGroupTeam.Create(Guid.NewGuid(), Id, DrawId, team, _teams.Count + 1);
         _teams.Add(placement);
 
         return placement;

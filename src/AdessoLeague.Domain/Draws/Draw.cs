@@ -8,6 +8,13 @@ public sealed class Draw
 {
     private readonly List<DrawGroup> _groups = [];
 
+    // Materialization only; the ORM assigns every member right after calling it.
+    private Draw()
+    {
+        DrawnBy = null!;
+        GroupCount = null!;
+    }
+
     private Draw(Guid id, DrawnBy drawnBy, GroupCount groupCount, int seed, DateTime createdAtUtc)
     {
         Id = id;

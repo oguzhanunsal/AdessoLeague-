@@ -2,4 +2,9 @@
 
   <!-- No NuGet packages and no project references: the domain layer stays dependency-free. -->
 
+  <ItemGroup>
+    <!-- Only so the EF value converters can call GroupName.From; the type stays internal to callers. -->
+    <InternalsVisibleTo Include="AdessoLeague.Infrastructure" />
+  </ItemGroup>
+
 </Project>
