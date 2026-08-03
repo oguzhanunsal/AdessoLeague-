@@ -1,3 +1,5 @@
+using AdessoLeague.Domain.Leagues;
+
 namespace AdessoLeague.Domain.Draws;
 
 public sealed class DrawGroup
@@ -28,11 +30,13 @@ public sealed class DrawGroup
 
     internal bool Contains(Guid teamId) => _teams.Exists(team => team.TeamId == teamId);
 
-    internal DrawGroupTeam Place(Guid teamId)
+    internal DrawGroupTeam Place(Team team)
     {
-        var placement = DrawGroupTeam.Create(Guid.NewGuid(), Id, teamId, _teams.Count + 1);
+        var placement = DrawGroupTeam.Create(Guid.NewGuid(), Id, team, _teams.Count + 1);
         _teams.Add(placement);
 
         return placement;
     }
+
+    internal void RemoveLastPlacement() => _teams.RemoveAt(_teams.Count - 1);
 }

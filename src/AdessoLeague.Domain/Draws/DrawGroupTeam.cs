@@ -1,12 +1,15 @@
+using AdessoLeague.Domain.Leagues;
+
 namespace AdessoLeague.Domain.Draws;
 
 public sealed class DrawGroupTeam
 {
-    private DrawGroupTeam(Guid id, Guid drawGroupId, Guid teamId, int position)
+    private DrawGroupTeam(Guid id, Guid drawGroupId, Team team, int position)
     {
         Id = id;
         DrawGroupId = drawGroupId;
-        TeamId = teamId;
+        TeamId = team.Id;
+        Team = team;
         Position = position;
     }
 
@@ -16,9 +19,11 @@ public sealed class DrawGroupTeam
 
     public Guid TeamId { get; private set; }
 
+    public Team Team { get; private set; }
+
     /// <summary>1-based slot within the group; records the order the draw produced.</summary>
     public int Position { get; private set; }
 
-    internal static DrawGroupTeam Create(Guid id, Guid drawGroupId, Guid teamId, int position) =>
-        new(id, drawGroupId, teamId, position);
+    internal static DrawGroupTeam Create(Guid id, Guid drawGroupId, Team team, int position) =>
+        new(id, drawGroupId, team, position);
 }

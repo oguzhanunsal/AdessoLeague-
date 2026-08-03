@@ -82,8 +82,21 @@ public sealed class Draw
                 $"Group {target.Name} already holds {GroupCount.TeamsPerGroup} teams."));
         }
 
-        target.Place(team.Id);
+        target.Place(team);
 
         return Result.Success();
+    }
+
+    internal DrawGroup GroupAt(int ordinal) => _groups[ordinal];
+
+    // Backtracking undo; internal so the aggregate stays append-only for every other caller.
+    internal void RemoveLastPlacement()
+    {
+        if (PlacedTeamCount == 0)
+        {
+            return;
+        }
+
+        _groups[(PlacedTeamCount - 1) % _groups.Count].RemoveLastPlacement();
     }
 }
