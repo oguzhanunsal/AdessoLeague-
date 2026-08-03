@@ -49,6 +49,27 @@ var drawOptions = builder.Configuration.GetSection(DrawOptions.SectionName).Get<
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Without this the rejection is an empty 429; every other error in this API is a problem document.
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+
+        await context.HttpContext.RequestServices
+            .GetRequiredService<IProblemDetailsService>()
+            .TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = context.HttpContext,
+                ProblemDetails = new ProblemDetails
+                {
+                    Status = StatusCodes.Status429TooManyRequests,
+                    Title = "Too many requests.",
+                    Detail = "The draw endpoint accepts a limited number of requests per minute.",
+                    Instance = context.HttpContext.Request.Path,
+                },
+            });
+    };
+
     options.AddFixedWindowLimiter(RateLimitPolicies.CreateDraw, limiter =>
     {
         limiter.PermitLimit = drawOptions.RequestsPerMinute;

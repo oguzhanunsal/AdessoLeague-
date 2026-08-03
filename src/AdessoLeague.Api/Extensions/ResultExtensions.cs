@@ -1,5 +1,6 @@
 using AdessoLeague.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AdessoLeague.Api.Extensions;
 
@@ -25,12 +26,19 @@ public static class ResultExtensions
     {
         if (error is ValidationError validation)
         {
-            return controller.ValidationProblem(new ValidationProblemDetails(ToDictionary(validation))
+            // Built through the factory rather than by hand so the "type" member and any registered
+            // ProblemDetails customisation land on 400s exactly as they do on 404s and 409s.
+            var modelState = new ModelStateDictionary();
+            foreach (var failure in validation.Errors)
             {
-                Title = "One or more validation errors occurred.",
-                Status = StatusCodes.Status400BadRequest,
-                Instance = controller.HttpContext.Request.Path,
-            });
+                modelState.AddModelError(failure.Code, failure.Message);
+            }
+
+            return controller.ValidationProblem(controller.ProblemDetailsFactory.CreateValidationProblemDetails(
+                controller.HttpContext,
+                modelState,
+                statusCode: StatusCodes.Status400BadRequest,
+                instance: controller.HttpContext.Request.Path));
         }
 
         var status = error.Type switch
@@ -47,10 +55,4 @@ public static class ResultExtensions
             title: error.Code);
     }
 
-    private static Dictionary<string, string[]> ToDictionary(ValidationError validation) => validation.Errors
-        .GroupBy(error => error.Code, StringComparer.Ordinal)
-        .ToDictionary(
-            group => group.Key,
-            group => group.Select(error => error.Message).ToArray(),
-            StringComparer.Ordinal);
 }

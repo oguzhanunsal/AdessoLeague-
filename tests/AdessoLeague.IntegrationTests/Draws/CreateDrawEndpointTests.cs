@@ -89,9 +89,13 @@ public sealed class CreateDrawEndpointTests(LeagueApiFactory factory) : IAsyncLi
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>(_cancellation);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        // A [Produces("application/json")] on the controller silently rewrote this media type once;
+        // asserting it keeps the RFC 9457 contract from regressing.
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
         problem!.Status.Should().Be(StatusCodes.Status400BadRequest);
         problem.Title.Should().Be("One or more validation errors occurred.");
         problem.Instance.Should().Be(DrawEndpoint.Path);
+        problem.Type.Should().NotBeNullOrWhiteSpace();
         problem.Errors.Should().ContainKey(nameof(CreateDrawPayload.GroupCount));
         problem.Errors[nameof(CreateDrawPayload.GroupCount)].Should().ContainMatch("*4, 8*");
 

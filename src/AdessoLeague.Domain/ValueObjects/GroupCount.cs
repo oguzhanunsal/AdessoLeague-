@@ -8,7 +8,9 @@ public sealed record GroupCount
 
     private GroupCount(int value) => Value = value;
 
-    public static IReadOnlyCollection<int> SupportedValues => Supported;
+    // AsReadOnly, not the array itself: the caller could otherwise cast it back and rewrite the
+    // only place n is constrained.
+    public static IReadOnlyCollection<int> SupportedValues { get; } = Array.AsReadOnly(Supported);
 
     public int Value { get; }
 

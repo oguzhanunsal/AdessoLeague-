@@ -36,4 +36,30 @@ public sealed class DrawRateLimitTests(LeagueApiFactory factory) : IAsyncLifetim
         var draws = await factory.ReadDrawsAsync(_cancellation);
         draws.Should().HaveCount(ProductionRequestsPerMinute + 5);
     }
+
+    [Fact]
+    public async Task CreateDraw_BeyondTheConfiguredLimit_Returns429WithAProblemDocument()
+    {
+        const int limit = 3;
+
+        using var throttled = factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Draw:RequestsPerMinute", limit.ToString(CultureInfo.InvariantCulture)));
+        using var client = throttled.CreateClient();
+
+        HttpResponseMessage? rejected = null;
+        for (var request = 0; request <= limit; request++)
+        {
+            rejected = await client.PostAsJsonAsync(DrawEndpoint.Path, DrawEndpoint.Payload(8), _cancellation);
+        }
+
+        rejected.Should().NotBeNull();
+        rejected!.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
+        rejected.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
+
+        var problem = await rejected.Content.ReadFromJsonAsync<ProblemDetails>(_cancellation);
+
+        problem.Should().NotBeNull();
+        problem!.Status.Should().Be(StatusCodes.Status429TooManyRequests);
+        problem.Title.Should().NotBeNullOrWhiteSpace();
+    }
 }

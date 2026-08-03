@@ -79,7 +79,7 @@ dotnet test AdessoLeague.sln -c Release
 | Metot | Yol | Yanıtlar |
 |---|---|---|
 | `POST` | `/api/v1/draws` | `201` + `Location` · `400` ProblemDetails · `429` |
-| `GET` | `/api/v1/draws/{id}` | `200` · `400` · `404` ProblemDetails |
+| `GET` | `/api/v1/draws/{id}` | `200` · `404` ProblemDetails |
 | `GET` | `/api/v1/draws?page=1&pageSize=20` | `200` sayfalı geçmiş · `400` |
 | `GET` | `/health/live`, `/health/ready` | `200` / `503` |
 
@@ -348,7 +348,7 @@ Aşağıdakiler istenmedi ve bilerek yapılmadı. Her biri için gerekçe ve ger
 |---|---|---|
 | **AutoMapper** | Tek bir yanıt tipi var; mapping 40 satır ve derleme zamanında denetleniyor. Bir mapping kütüphanesi çalışma zamanı hatası ve konfigürasyon yükü ekler | Mapping sayısı arttığında `Mapperly` gibi kaynak üreteçli bir çözüm; çalışma zamanı yansıması yok |
 | **Kimlik doğrulama / yetkilendirme** | İstenmedi; kura herkese açık bir okuma-yazma işlemi olarak tanımlandı | `AddAuthentication().AddJwtBearer()` + `POST /draws` üzerinde `[Authorize]`; `drawnBy` gövdeden değil token claim'inden alınırdı |
-| **Önbellek** | Kura geçmişi küçük, okuma sorguları tek round-trip ve indeksli. Ölçülmemiş bir darboğaz için karmaşıklık eklenmedi | `IDistributedCache` + Redis; `GET /draws/{id}` değişmez bir kaynak olduğu için `ETag`/`Cache-Control` de yeterdi |
+| **Önbellek** | Kura geçmişi küçük; `GET /draws/{id}` birincil anahtar üzerinden tek sorgu, liste ise sayım + sayfa olmak üzere iki sorgu. Ölçülmemiş bir darboğaz için karmaşıklık eklenmedi | `IDistributedCache` + Redis; `GET /draws/{id}` değişmez bir kaynak olduğu için `ETag`/`Cache-Control` de yeterdi |
 | **Mikroservis / mesajlaşma** | Tek bir sınırlı bağlam, tek veritabanı. Bölmek dağıtık transaction sorununu bedavaya satın almak olurdu | Kura sonucu başka sistemleri tetikleseydi transactional outbox + bir broker |
 | **Outbox pattern** | Dışarıya yayınlanan bir olay yok; kayıt tek transaction'da tamamlanıyor | `draws` ile aynı transaction'da `outbox_messages` tablosu ve ayrı bir dispatcher |
 | **Event sourcing** | Kura değişmez bir kayıt; durum geçmişi yok, sadece sonuç var. Seed zaten yeniden üretilebilirliği sağlıyor | Kuranın sonradan düzeltilmesi gerekseydi olay akışı anlamlı olurdu |

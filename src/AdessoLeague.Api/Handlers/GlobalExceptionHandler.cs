@@ -15,6 +15,7 @@ public sealed class GlobalExceptionHandler(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
+        ArgumentNullException.ThrowIfNull(exception);
 
         logger.LogError(
             exception,
@@ -36,7 +37,7 @@ public sealed class GlobalExceptionHandler(
         // Stack traces are internal detail; only a developer machine may see them.
         if (environment.IsDevelopment())
         {
-            problemDetails.Detail = exception?.ToString();
+            problemDetails.Detail = exception.ToString();
         }
 
         return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext

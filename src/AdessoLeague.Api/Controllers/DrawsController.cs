@@ -15,7 +15,9 @@ namespace AdessoLeague.Api.Controllers;
 [ApiController]
 [ApiVersion(VersionNumber)]
 [Route("api/v{version:apiVersion}/draws")]
-[Produces("application/json")]
+// No [Produces]: it forces every response onto its first media type, which would rewrite
+// ProblemDetails as application/json and stop RFC 9457 clients recognising the error body.
+// Media types are documented per status code through [ProducesResponseType] instead.
 public sealed class DrawsController(ISender sender) : ControllerBase
 {
     private const string VersionNumber = "1.0";
@@ -28,6 +30,7 @@ public sealed class DrawsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(DrawResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<DrawResponse>> Create(
         CreateDrawRequest request,
         CancellationToken cancellationToken)
@@ -50,10 +53,9 @@ public sealed class DrawsController(ISender sender) : ControllerBase
 
     /// <summary>Returns a stored draw.</summary>
     /// <response code="200">The draw was found.</response>
-    /// <response code="404">No draw exists with that id.</response>
+    /// <response code="404">No draw exists with that id, or the id is not a GUID.</response>
     [HttpGet("{id:guid}", Name = nameof(GetById))]
     [ProducesResponseType(typeof(DrawResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<DrawResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
