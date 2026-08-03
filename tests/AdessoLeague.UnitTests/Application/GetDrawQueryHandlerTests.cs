@@ -1,12 +1,16 @@
 using AdessoLeague.Application.Features.Draws.GetDrawById;
 using AdessoLeague.Application.Features.Draws.GetDraws;
+using AdessoLeague.Application.Options;
 using AdessoLeague.UnitTests.Domain;
+using Microsoft.Extensions.Options;
 
 namespace AdessoLeague.UnitTests.Application;
 
 public sealed class GetDrawQueryHandlerTests
 {
     private static readonly DateTime CreatedAtUtc = new(2026, 8, 3, 9, 30, 0, DateTimeKind.Utc);
+
+    private static readonly IOptions<DrawOptions> Options = Microsoft.Extensions.Options.Options.Create(new DrawOptions());
 
     private readonly FakeDrawQueries _draws = new();
 
@@ -38,7 +42,7 @@ public sealed class GetDrawQueryHandlerTests
     [Fact]
     public async Task Handle_WithPagingParameters_PassesThemThroughUnchanged()
     {
-        await new GetDrawsQueryHandler(_draws)
+        await new GetDrawsQueryHandler(_draws, Options)
             .Handle(new GetDrawsQuery(Page: 3, PageSize: 15), CancellationToken.None);
 
         _draws.LastPage.Should().Be(3);
@@ -51,7 +55,7 @@ public sealed class GetDrawQueryHandlerTests
         StoreDraw(8);
         StoreDraw(4);
 
-        var result = await new GetDrawsQueryHandler(_draws)
+        var result = await new GetDrawsQueryHandler(_draws, Options)
             .Handle(new GetDrawsQuery(Page: 5, PageSize: 20), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -67,7 +71,7 @@ public sealed class GetDrawQueryHandlerTests
         StoreDraw(4);
         StoreDraw(8);
 
-        var result = await new GetDrawsQueryHandler(_draws)
+        var result = await new GetDrawsQueryHandler(_draws, Options)
             .Handle(new GetDrawsQuery(Page: 1, PageSize: 2), CancellationToken.None);
 
         result.Value.Items.Should().HaveCount(2);

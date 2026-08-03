@@ -1,5 +1,6 @@
 using AdessoLeague.Api.Contracts.Requests;
 using AdessoLeague.Api.Extensions;
+using AdessoLeague.Api.RateLimiting;
 using AdessoLeague.Application.Contracts;
 using AdessoLeague.Application.Features.Draws.CreateDraw;
 using AdessoLeague.Application.Features.Draws.GetDrawById;
@@ -7,6 +8,7 @@ using AdessoLeague.Application.Features.Draws.GetDraws;
 using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AdessoLeague.Api.Controllers;
 
@@ -22,6 +24,7 @@ public sealed class DrawsController(ISender sender) : ControllerBase
     /// <response code="201">The draw was performed and stored.</response>
     /// <response code="400">The request body failed validation.</response>
     [HttpPost]
+    [EnableRateLimiting(RateLimitPolicies.CreateDraw)]
     [ProducesResponseType(typeof(DrawResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -67,7 +70,7 @@ public sealed class DrawsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PagedList<DrawSummaryResponse>>> GetAll(
         int page = 1,
-        int pageSize = GetDrawsQuery.DefaultPageSize,
+        int? pageSize = null,
         CancellationToken cancellationToken = default)
     {
         var result = await sender.Send(new GetDrawsQuery(page, pageSize), cancellationToken);

@@ -1,26 +1,61 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
+using AdessoLeague.Api.Handlers;
+using AdessoLeague.Api.HealthChecks;
+using AdessoLeague.Api.Middleware;
+using AdessoLeague.Api.RateLimiting;
 using AdessoLeague.Api.Swagger;
 using AdessoLeague.Application;
+using AdessoLeague.Application.Options;
 using AdessoLeague.Infrastructure;
 using AdessoLeague.Infrastructure.Persistence;
 using Asp.Versioning;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using InfrastructureServices = AdessoLeague.Infrastructure.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services));
 
 builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
 builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = false);
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services
+    .AddOptions<DrawOptions>()
+    .Bind(builder.Configuration.GetSection(DrawOptions.SectionName))
+    .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<DrawOptions>, DrawOptionsValidator>();
+
+var drawOptions = builder.Configuration.GetSection(DrawOptions.SectionName).Get<DrawOptions>() ?? new DrawOptions();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter(RateLimitPolicies.CreateDraw, limiter =>
+    {
+        limiter.PermitLimit = drawOptions.RequestsPerMinute;
+        limiter.Window = TimeSpan.FromMinutes(1);
+        limiter.QueueLimit = 0;
+    });
+});
 
 builder.Services
     .AddApiVersioning(options =>
@@ -56,10 +91,22 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        builder.Configuration.GetConnectionString(InfrastructureServices.ConnectionStringName)
+            ?? throw new InvalidOperationException(
+                $"Connection string \"{InfrastructureServices.ConnectionStringName}\" is missing."),
+        name: "postgres",
+        tags: ["ready"]);
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
+app.UseMiddleware<CorrelationIdMiddleware>();
+app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
 {
@@ -79,6 +126,19 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseRateLimiter();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = HealthCheckResponseWriter.WriteAsync,
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = HealthCheckResponseWriter.WriteAsync,
+});
 
 app.MapControllers();
 
