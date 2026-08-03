@@ -143,3 +143,7 @@ app.MapHealthChecks("/health/ready", new HealthCheckOptions
 app.MapControllers();
 
 await app.RunAsync();
+
+// Top-level statements compile into an internal Program class; WebApplicationFactory<Program> in the
+// integration tests needs it to be public. No other purpose - do not add members here.
+public partial class Program;

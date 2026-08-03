@@ -286,7 +286,8 @@ Migration dosyaları elle düzenlenmez; `dotnet ef migrations add <Ad>` ile üre
 
 ## Test stratejisi
 
-`dotnet test` — **279 test**, ~5 sn.
+`dotnet test` — **292 test** (279 birim + 13 integration), ~15 sn. Integration testleri Docker
+gerektirir; Testcontainers kendi PostgreSQL konteynerini kaldırır, ayrıca kurulum gerekmez.
 
 **Kura motoru — invariant + fuzz.** `n=4` ve `n=8` için 10.000 seed (toplam **20.000 kura**), her
 sonuçta 7 invariant doğrulanır:
@@ -315,13 +316,22 @@ handler'a hiç ulaşmadığı ve repository'ye kayıt düşmediği doğrulanır.
 **Domain.** Value object'ler (`GroupCount`, `GroupName`, `DrawnBy`) ve `Draw` aggregate'inin
 yerleştirme kuralları ayrı ayrı test edilir.
 
-**Henüz yazılmadı — integration testleri.** `tests/AdessoLeague.IntegrationTests` projesi ve
-`Testcontainers.PostgreSql` bağımlılığı hazır ama içi boştur. Uçtan uca senaryolar (gerçek
-PostgreSQL üzerinde `WebApplicationFactory` ile `n=4`/`n=8`, geçersiz girdi, kaydın DB'de doğrulanması,
-eşzamanlı istekler) planlanmış son adımdır. Bu adım tamamlanana kadar API davranışı yalnızca elle
-doğrulanmıştır (aşağıdaki bölüm).
+**Integration — gerçek PostgreSQL üzerinde uçtan uca.** `Testcontainers.PostgreSql` ile ayağa kalkan
+bir konteyner ve `WebApplicationFactory<Program>` üzerinden 13 senaryo: `n=8` ve `n=4` için kayıt,
+geçersiz `groupCount` (5, 0, -1), boş isim, `drawnBy` ve `seed`'in gerçekten yazılması,
+`Location`'dan geri okuma, bilinmeyen id için 404, geçmişin `createdAtUtc` azalan sıralanması,
+**10 eşzamanlı istek** (10 ayrı kura, 320 yerleşim satırı) ve yanıt şemasının `groups[].groupName` /
+`groups[].teams[].name` alanlarını ham JSON üzerinden doğrulaması.
 
-**Elle doğrulanan.** Her adımın sonunda API canlı çalıştırılıp `curl` ile denendi: `n=8`/`n=4`
+Doğrulamalar yalnızca HTTP yanıtına değil **veritabanına** da bakar: satır sayıları ve
+`drawn_by_first_name` / `seed` kolonları ham SQL ile okunur. Saklanan seed'in anlamlı olduğu da
+test edilir — aynı seed ile kura yeniden oynatıldığında birebir aynı grup dizilimi çıkmalıdır.
+
+Testler tek bir konteyneri paylaşır ve her testin başında `TRUNCATE draws CASCADE` çalışır;
+seed'lenmiş `countries`/`teams` satırları korunur. `dotnet test` arka arkaya iki kez koşturularak
+izolasyon doğrulandı — ikinci koşumda da 292/292 yeşil.
+
+**Elle doğrulanan.** Ayrıca her adımın sonunda API canlı çalıştırılıp `curl` ile denendi: `n=8`/`n=4`
 yanıt şeması, `n=5` ve boş isim için 400, `Location` başlığından geri okuma, POST ve GET
 yanıtlarının `groups` bölümünün baytı baytına aynı olması, okuma sorgularının SQL sayısı
 (`GET /draws/{id}` → 1 sorgu, `GET /draws` → 2 sorgu), rate limit (35 istek → 30×201 + 5×429),
