@@ -26,6 +26,7 @@ public static class DependencyInjection
             .UseSnakeCaseNamingConvention());
 
         services.AddScoped<IDrawRepository, DrawRepository>();
+        services.AddScoped<IDrawQueries, DrawQueries>();
         services.AddScoped<ITeamRepository, TeamRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 

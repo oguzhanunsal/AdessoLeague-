@@ -6,7 +6,6 @@ public sealed class DrawGroup
 {
     private readonly List<DrawGroupTeam> _teams = [];
 
-    // Materialization only; the ORM assigns every member right after calling it.
     private DrawGroup() => Name = null!;
 
     private DrawGroup(Guid id, Guid drawId, GroupName name, int ordinal)

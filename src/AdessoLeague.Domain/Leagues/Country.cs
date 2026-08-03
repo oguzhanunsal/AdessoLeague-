@@ -4,7 +4,6 @@ public sealed class Country
 {
     private readonly List<Team> _teams = [];
 
-    // Materialization only; the ORM assigns every member right after calling it.
     private Country() => Name = null!;
 
     private Country(Guid id, string name)

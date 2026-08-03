@@ -8,7 +8,7 @@ public sealed class GetDrawQueryHandlerTests
 {
     private static readonly DateTime CreatedAtUtc = new(2026, 8, 3, 9, 30, 0, DateTimeKind.Utc);
 
-    private readonly FakeDrawRepository _draws = new();
+    private readonly FakeDrawQueries _draws = new();
 
     [Fact]
     public async Task Handle_WithAnUnknownId_ReturnsNotFound()
@@ -24,7 +24,7 @@ public sealed class GetDrawQueryHandlerTests
     [Fact]
     public async Task Handle_WithAStoredId_ReturnsTheDraw()
     {
-        var draw = await StoreDraw(8);
+        var draw = StoreDraw(8);
 
         var result = await new GetDrawByIdQueryHandler(_draws)
             .Handle(new GetDrawByIdQuery(draw.Id), CancellationToken.None);
@@ -36,10 +36,20 @@ public sealed class GetDrawQueryHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WithPagingParameters_PassesThemThroughUnchanged()
+    {
+        await new GetDrawsQueryHandler(_draws)
+            .Handle(new GetDrawsQuery(Page: 3, PageSize: 15), CancellationToken.None);
+
+        _draws.LastPage.Should().Be(3);
+        _draws.LastPageSize.Should().Be(15);
+    }
+
+    [Fact]
     public async Task Handle_WithAPageBeyondTheData_ReturnsAnEmptyPageWithTheRealTotal()
     {
-        await StoreDraw(8);
-        await StoreDraw(4);
+        StoreDraw(8);
+        StoreDraw(4);
 
         var result = await new GetDrawsQueryHandler(_draws)
             .Handle(new GetDrawsQuery(Page: 5, PageSize: 20), CancellationToken.None);
@@ -53,9 +63,9 @@ public sealed class GetDrawQueryHandlerTests
     [Fact]
     public async Task Handle_WithSeveralStoredDraws_ReportsTotalCountAndPageSize()
     {
-        await StoreDraw(8);
-        await StoreDraw(4);
-        await StoreDraw(8);
+        StoreDraw(8);
+        StoreDraw(4);
+        StoreDraw(8);
 
         var result = await new GetDrawsQueryHandler(_draws)
             .Handle(new GetDrawsQuery(Page: 1, PageSize: 2), CancellationToken.None);
@@ -66,7 +76,7 @@ public sealed class GetDrawQueryHandlerTests
         result.Value.HasNextPage.Should().BeTrue();
     }
 
-    private async Task<Draw> StoreDraw(int groupCount)
+    private Draw StoreDraw(int groupCount)
     {
         var draw = Draw.Create(
             Guid.NewGuid(),
@@ -81,7 +91,7 @@ public sealed class GetDrawQueryHandlerTests
             draw.PlaceTeam(flatIndex % groupCount, pool[flatIndex]).IsSuccess.Should().BeTrue();
         }
 
-        await _draws.AddAsync(draw, CancellationToken.None);
+        _draws.Store(draw);
 
         return draw;
     }

@@ -26,8 +26,7 @@ public sealed record GroupName
         return names;
     }
 
-    // Rehydration path for persistence: the stored column is the only source, so anything outside
-    // the alphabet means the row is corrupt rather than the caller being wrong.
+    // Rehydration from storage: a value outside the alphabet means the row is corrupt.
     internal static GroupName From(string value)
     {
         if (value is not { Length: 1 } || !Alphabet.Contains(value[0], StringComparison.Ordinal))

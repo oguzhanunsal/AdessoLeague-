@@ -2,7 +2,6 @@ using AdessoLeague.Domain.Draws.Engine;
 
 namespace AdessoLeague.Infrastructure.Randomization;
 
-// Register per draw, never as a singleton: one seed identifies one draw.
 public sealed class SeededRandomProvider : IRandomProvider
 {
     private readonly Random _random;

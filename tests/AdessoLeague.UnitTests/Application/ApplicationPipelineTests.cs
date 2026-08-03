@@ -53,6 +53,7 @@ public sealed class ApplicationPipelineTests
 
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
         services.AddSingleton<IDrawRepository>(draws ?? new FakeDrawRepository());
+        services.AddSingleton<IDrawQueries>(new FakeDrawQueries());
         services.AddSingleton<ITeamRepository>(new FakeTeamRepository(LeagueTestData.Teams));
         services.AddSingleton<IUnitOfWork, FakeUnitOfWork>();
         services.AddSingleton<IDrawRule, OneTeamPerCountryRule>();

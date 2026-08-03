@@ -4,7 +4,6 @@ namespace AdessoLeague.Domain.Draws;
 
 public sealed class DrawGroupTeam
 {
-    // Materialization only; the ORM assigns every member right after calling it.
     private DrawGroupTeam() => Team = null!;
 
     private DrawGroupTeam(Guid id, Guid drawGroupId, Guid drawId, Team team, int position)
@@ -21,10 +20,6 @@ public sealed class DrawGroupTeam
 
     public Guid DrawGroupId { get; private set; }
 
-    /// <summary>
-    /// Denormalised from the owning group so "a team appears once per draw" can be a database
-    /// unique index instead of an application-level check.
-    /// </summary>
     public Guid DrawId { get; private set; }
 
     public Guid TeamId { get; private set; }

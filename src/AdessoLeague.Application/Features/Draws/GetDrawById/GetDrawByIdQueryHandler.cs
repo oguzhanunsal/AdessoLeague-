@@ -1,11 +1,10 @@
 using AdessoLeague.Application.Abstractions.Persistence;
 using AdessoLeague.Application.Contracts;
-using AdessoLeague.Application.Mapping;
 using MediatR;
 
 namespace AdessoLeague.Application.Features.Draws.GetDrawById;
 
-public sealed class GetDrawByIdQueryHandler(IDrawRepository draws)
+public sealed class GetDrawByIdQueryHandler(IDrawQueries draws)
     : IRequestHandler<GetDrawByIdQuery, Result<DrawResponse>>
 {
     public async Task<Result<DrawResponse>> Handle(GetDrawByIdQuery request, CancellationToken cancellationToken)
@@ -16,6 +15,6 @@ public sealed class GetDrawByIdQueryHandler(IDrawRepository draws)
 
         return draw is null
             ? Result.Failure<DrawResponse>(Error.NotFound("Draw.NotFound", $"No draw with id {request.Id} exists."))
-            : Result.Success(draw.ToResponse());
+            : Result.Success(draw);
     }
 }

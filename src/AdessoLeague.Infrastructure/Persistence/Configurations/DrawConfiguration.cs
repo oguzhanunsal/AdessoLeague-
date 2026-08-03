@@ -49,7 +49,6 @@ internal sealed class DrawConfiguration : IEntityTypeConfiguration<Draw>
             .HasForeignKey(group => group.DrawId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // The getter hands back a read-only wrapper, so the collection is only writable via the field.
         builder.Navigation(draw => draw.Groups).UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

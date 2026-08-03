@@ -23,7 +23,6 @@ internal sealed class CountryConfiguration : IEntityTypeConfiguration<Country>
             .HasForeignKey(team => team.CountryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // The getter hands back a read-only wrapper, so the collection is only writable via the field.
         builder.Navigation(country => country.Teams).UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasData(LeagueSeedData.Countries.Select(country => new

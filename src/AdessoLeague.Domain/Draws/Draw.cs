@@ -8,7 +8,6 @@ public sealed class Draw
 {
     private readonly List<DrawGroup> _groups = [];
 
-    // Materialization only; the ORM assigns every member right after calling it.
     private Draw()
     {
         DrawnBy = null!;
@@ -53,10 +52,7 @@ public sealed class Draw
         return draw;
     }
 
-    /// <summary>
-    /// Placements must arrive round-robin - group A slot 1, group B slot 1, ... - which is what
-    /// makes the recorded positions a faithful record of the draw order.
-    /// </summary>
+    // Placements must arrive round-robin: group A slot 1, group B slot 1, and so on.
     public Result PlaceTeam(int groupOrdinal, Team team)
     {
         if (groupOrdinal < 0 || groupOrdinal >= _groups.Count)
